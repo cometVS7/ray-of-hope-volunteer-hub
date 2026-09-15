@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  VOLUNTEER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TaskStatus {
+  ASSIGNED
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String     @id @default(uuid())
+  role         Role       @default(VOLUNTEER)
+  name         String
+  email        String     @unique
+  passwordHash String
+  volunteerId  String?    @unique
+  phone        String?
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  assignedTasks        Task[]           @relation("AssignedTasks")
+  createdTasks         Task[]           @relation("CreatedTasks")
+  submissions          TaskSubmission[] @relation("VolunteerSubmissions")
+  reviewedSubmissions  TaskSubmission[] @relation("AdminReviewedSubmissions")
+
+  @@map("users")
+}
+
+model Task {
+  id             String     @id @default(uuid())
+  title          String
+  description    String     @db.Text
+  expectedHours  Float
+  assignmentDate DateTime   @default(now())
+  deadline       DateTime
+  status         TaskStatus @default(ASSIGNED)
+
+  assignedToId String
+  assignedTo   User   @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Restrict)
+
+  submission TaskSubmission?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId, status])
+  @@map("tasks")
+}
+
+model TaskSubmission {
+  id              String       @id @default(uuid())
+  taskId          String       @unique
+  task            Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  volunteerId     String
+  volunteer       User         @relation("VolunteerSubmissions", fields: [volunteerId], references: [id], onDelete: Cascade)
+  actualHours     Float
+  completionNotes String       @db.Text
+  submittedAt     DateTime     @default(now())
+  reviewStatus    ReviewStatus @default(PENDING)
+  approvedHours   Float        @default(0.0)
+  reviewNotes     String?      @db.Text
+  reviewedById    String?
+  reviewedBy      User?        @relation("AdminReviewedSubmissions", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([volunteerId, reviewStatus])
+  @@index([reviewStatus])
+  @@map("task_submissions")
+}
