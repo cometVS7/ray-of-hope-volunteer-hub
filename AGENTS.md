@@ -7,7 +7,7 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 ## Key Technical Decisions
 - **Backend**: Node.js, Express, TypeScript, REST API
 - **Database**: PostgreSQL (hosted on Neon), Prisma ORM (*No SQLite*)
-- **Authentication**: JWT (JSON Web Tokens), `bcrypt` password hashing, Role-Based Access Control (`ADMIN`, `VOLUNTEER`)
+- **Authentication**: JWT (JSON Web Tokens), `bcrypt` (salt rounds = 10), Role-Based Access Control (`ADMIN`, `VOLUNTEER`)
 - **Frontend (Separate / Future)**: Next.js, TypeScript, Tailwind CSS, 21st.dev components (communicates via REST API)
 - **External Services**: PostgreSQL on Neon (no external APIs)
 
@@ -18,19 +18,26 @@ The platform enables NGO administrators to manage volunteers, create and assign 
    - There is NO duplicate `totalApprovedHours` stored on the User record.
    - When a task is marked `SUBMITTED`, the logged hours do NOT count toward official hours.
    - Only when an Admin explicitly reviews and approves (`reviewStatus = 'APPROVED'`, `Task.status = 'APPROVED'`) do the approved hours count.
-2. **Volunteer Identifier**: Volunteers log in using a unique Volunteer ID (e.g., `VOL-1001`) or email and password.
+2. **Volunteer Identifier**: Volunteers log in using a unique Volunteer ID (e.g., `ARH-VOL-001`) or email and password.
 3. **Simplified Task Lifecycle**:
    - `ASSIGNED` -> `SUBMITTED` -> `APPROVED` (Counts hours) OR `REJECTED` (Feedback given, volunteer can resubmit).
 
+## Implemented Authentication & RBAC (Milestone 2)
+- `POST /api/auth/login`: Admin (`email` + `password`), Volunteer (`volunteerId` or `email` + `password`).
+- `GET /api/auth/me`: Safe authenticated user profile (excludes `passwordHash`).
+- `authenticate` middleware (`src/middlewares/auth.middleware.ts`): Bearer token parsing and JWT verification.
+- `requireRole`, `requireAdmin`, `requireVolunteer` (`src/middlewares/role.middleware.ts`): RBAC enforcement.
+- Seed script (`prisma/seed.ts`): Pre-configured development test accounts (`admin@rayofhope.org` / `Admin@123`, `ARH-VOL-001` / `Volunteer@123`).
+
 ## Directory Layout
-- `src/config/`: Environment configuration and database setup.
-- `src/controllers/`: Express request handlers.
-- `src/routes/`: Express route definitions grouped by domain (`auth`, `admin`, `volunteer`, `health`).
-- `src/middlewares/`: JWT verification, role-based authorization, validation, error handling.
-- `src/services/`: Business logic, dynamic hours calculation, database operations.
-- `src/utils/`: Helper functions, token generators, custom AppError, response formatters, prisma client.
-- `src/types/`: TypeScript interfaces, custom Express Request types.
-- `prisma/`: Prisma schema (`schema.prisma`) and migrations/seed.
+- `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).
+- `src/controllers/`: Express request handlers (`auth.controller.ts`).
+- `src/routes/`: Express route definitions grouped by domain (`auth.routes.ts`, `health.routes.ts`, `index.ts`).
+- `src/middlewares/`: JWT verification (`auth.middleware.ts`), RBAC (`role.middleware.ts`), error handling (`error.middleware.ts`).
+- `src/services/`: Business logic, auth service (`auth.service.ts`), dynamic hours calculation.
+- `src/utils/`: JWT (`jwt.ts`), password hashing (`password.ts`), custom AppError (`app-error.ts`), response formatters (`response.ts`).
+- `src/types/`: TypeScript interfaces and Express Request augmentation.
+- `prisma/`: Prisma schema (`schema.prisma`) and seed (`seed.ts`).
 - `docs/`: Architectural, API, and database specifications.
 
 ## Important Development Constraints
