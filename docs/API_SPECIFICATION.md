@@ -61,42 +61,139 @@ Error response envelope:
 
 ## 2. Admin — Volunteer Management (`/api/admin/volunteers`)
 
-### `GET /api/admin/volunteers`
-- **Description**: List volunteers with search, filtering, and pagination.
-- **Access**: Admin only.
-- **Query Params**:
-  - `search`: Filter by name or `volunteerId`
-  - `status`: `ACTIVE` | `INACTIVE`
-  - `page`: default `1`
-  - `limit`: default `20`
+All endpoints in this group require authentication and `ADMIN` role (`authenticate` + `requireAdmin`).
+Unauthenticated requests receive `401 Unauthorized`.
+Volunteer requests receive `403 Forbidden`.
 
 ### `POST /api/admin/volunteers`
-- **Description**: Create a new volunteer account.
-- **Access**: Admin only.
+- **Description**: Create a new volunteer account with an automatically generated sequential Volunteer ID (`ARH-VOL-001`, `ARH-VOL-002`, etc.).
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
 - **Request Body**:
   ```json
   {
-    "name": "John Smith",
-    "email": "john.smith@example.com",
-    "volunteerId": "VOL-1002",
-    "phone": "+1234567890",
-    "password": "InitialTempPassword123!"
+    "name": "Alex Johnson",
+    "email": "alex@example.com",
+    "password": "Volunteer@123",
+    "phone": "+919876543210"
+  }
+  ```
+  - `name`: Required, non-empty string.
+  - `email`: Required, valid email format (must be unique).
+  - `password`: Required, minimum 6 characters (bcrypt hashed with work factor 10).
+  - `phone`: Optional string.
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer created successfully",
+    "data": {
+      "id": "7820e181-4ba2-47d3-9584-...",
+      "name": "Alex Johnson",
+      "email": "alex@example.com",
+      "role": "VOLUNTEER",
+      "volunteerId": "ARH-VOL-002",
+      "phone": "+919876543210",
+      "status": "ACTIVE",
+      "createdAt": "2026-09-15T18:30:00.000Z",
+      "updatedAt": "2026-09-15T18:30:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Validation failure (empty name, invalid email, password < 6 chars).
+  - `409 Conflict`: A user with this email already exists (`"A user with this email already exists"`).
+
+### `GET /api/admin/volunteers`
+- **Description**: List volunteers with search, status filtering, and pagination.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Query Params**:
+  - `search`: Filter by volunteer `name`, `volunteerId` (e.g. `ARH-VOL-001`), or `email`.
+  - `status`: Filter by status (`ACTIVE` | `INACTIVE`).
+  - `page`: Page number (default: `1`, minimum: `1`).
+  - `limit`: Items per page (default: `20`, maximum: `100`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteers retrieved successfully",
+    "data": {
+      "volunteers": [
+        {
+          "id": "7820e181-4ba2-47d3-9584-...",
+          "name": "Alex Johnson",
+          "email": "alex@example.com",
+          "role": "VOLUNTEER",
+          "volunteerId": "ARH-VOL-001",
+          "phone": "+919876543210",
+          "status": "ACTIVE",
+          "createdAt": "2026-09-15T18:00:00.000Z",
+          "updatedAt": "2026-09-15T18:00:00.000Z"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 1,
+        "totalPages": 1
+      }
+    }
   }
   ```
 
 ### `GET /api/admin/volunteers/:id`
-- **Description**: Get volunteer profile, statistical metrics (total approved hours, completed tasks, pending tasks), and full task history.
-- **Access**: Admin only.
+- **Description**: Get individual volunteer profile by database UUID.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer retrieved successfully",
+    "data": {
+      "id": "7820e181-4ba2-47d3-9584-...",
+      "name": "Alex Johnson",
+      "email": "alex@example.com",
+      "role": "VOLUNTEER",
+      "volunteerId": "ARH-VOL-001",
+      "phone": "+919876543210",
+      "status": "ACTIVE",
+      "createdAt": "2026-09-15T18:00:00.000Z",
+      "updatedAt": "2026-09-15T18:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `404 Not Found`: Volunteer with specified ID does not exist or is not a volunteer.
 
 ### `PATCH /api/admin/volunteers/:id/status`
-- **Description**: Activate or deactivate a volunteer account.
-- **Access**: Admin only.
+- **Description**: Activate (`ACTIVE`) or deactivate (`INACTIVE`) a volunteer. Soft status toggle preserves task/submission history; hard deletion (`DELETE`) is intentionally disabled.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
 - **Request Body**:
   ```json
   {
     "status": "INACTIVE"
   }
   ```
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer status updated successfully",
+    "data": {
+      "id": "7820e181-4ba2-47d3-9584-...",
+      "name": "Alex Johnson",
+      "email": "alex@example.com",
+      "role": "VOLUNTEER",
+      "volunteerId": "ARH-VOL-001",
+      "phone": "+919876543210",
+      "status": "INACTIVE",
+      "createdAt": "2026-09-15T18:00:00.000Z",
+      "updatedAt": "2026-09-15T18:35:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Invalid status value (must be `ACTIVE` or `INACTIVE`), or target user is an Admin.
+  - `404 Not Found`: Volunteer not found.
 
 ---
 

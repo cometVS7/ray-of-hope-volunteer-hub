@@ -45,6 +45,37 @@ export interface AuthSuccessData {
   };
 }
 
+export interface CreateVolunteerInput {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string | null;
+}
+
+export interface UpdateVolunteerStatusInput {
+  status: UserStatus;
+}
+
+export interface VolunteerQueryFilters {
+  search?: string;
+  status?: UserStatus;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface VolunteerListResponse {
+  volunteers: SafeUser[];
+  pagination: PaginationMeta;
+}
+
+
 // Extend Express Request interface globally
 declare global {
   namespace Express {

@@ -37,3 +37,10 @@ export class BadRequestError extends AppError {
     super(message, 400, errors);
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message = 'Resource conflict') {
+    super(message, 409);
+  }
+}
+

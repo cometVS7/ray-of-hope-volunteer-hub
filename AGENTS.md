@@ -29,12 +29,19 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 - `requireRole`, `requireAdmin`, `requireVolunteer` (`src/middlewares/role.middleware.ts`): RBAC enforcement.
 - Seed script (`prisma/seed.ts`): Pre-configured development test accounts (`admin@rayofhope.org` / `Admin@123`, `ARH-VOL-001` / `Volunteer@123`).
 
+## Implemented Volunteer Management / Admin CRUD (Milestone 3)
+- `POST /api/admin/volunteers`: Admin creates volunteer with auto-generated sequential `volunteerId` (`ARH-VOL-001`), bcrypt-hashed password, unique email validation, and collision retry handling.
+- `GET /api/admin/volunteers`: Admin lists volunteers with pagination (`page`, `limit`), search (`name`, `volunteerId`, `email`), and status filtering (`ACTIVE`, `INACTIVE`).
+- `GET /api/admin/volunteers/:id`: Admin views single volunteer profile by UUID.
+- `PATCH /api/admin/volunteers/:id/status`: Admin activates/deactivates a volunteer. Prevents modification of Admin accounts. Hard delete is disabled.
+- Protection: `authenticate` + `requireAdmin` on all `/api/admin/volunteers/*` endpoints.
+
 ## Directory Layout
 - `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).
-- `src/controllers/`: Express request handlers (`auth.controller.ts`).
-- `src/routes/`: Express route definitions grouped by domain (`auth.routes.ts`, `health.routes.ts`, `index.ts`).
+- `src/controllers/`: Express request handlers (`auth.controller.ts`, `volunteer.controller.ts`).
+- `src/routes/`: Express route definitions grouped by domain (`auth.routes.ts`, `admin.routes.ts`, `health.routes.ts`, `index.ts`).
 - `src/middlewares/`: JWT verification (`auth.middleware.ts`), RBAC (`role.middleware.ts`), error handling (`error.middleware.ts`).
-- `src/services/`: Business logic, auth service (`auth.service.ts`), dynamic hours calculation.
+- `src/services/`: Business logic (`auth.service.ts`, `volunteer.service.ts`), dynamic hours calculation.
 - `src/utils/`: JWT (`jwt.ts`), password hashing (`password.ts`), custom AppError (`app-error.ts`), response formatters (`response.ts`).
 - `src/types/`: TypeScript interfaces and Express Request augmentation.
 - `prisma/`: Prisma schema (`schema.prisma`) and seed (`seed.ts`).
