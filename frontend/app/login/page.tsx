@@ -83,7 +83,7 @@ export default function LoginPage() {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. admin@rayofhope.org or ARH-VOL-001"
+                placeholder="Enter email or Volunteer ID"
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
               />
             </div>
@@ -115,18 +115,6 @@ export default function LoginPage() {
               {isSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <p className="text-xs text-slate-500 text-center font-medium mb-2">Development Test Credentials:</p>
-            <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-              <p>
-                <strong className="text-slate-800">Admin:</strong> admin@rayofhope.org / Admin@123
-              </p>
-              <p>
-                <strong className="text-slate-800">Volunteer:</strong> ARH-VOL-001 / Volunteer@123
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

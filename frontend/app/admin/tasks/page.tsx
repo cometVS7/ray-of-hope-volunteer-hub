@@ -314,7 +314,7 @@ export default function AdminTasksPage() {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="Food Distribution Logistics"
+              placeholder="e.g. Swargate Food Packet Distribution"
             />
           </div>
 
@@ -328,7 +328,7 @@ export default function AdminTasksPage() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="Coordinate food packet packing and distribution at Community Hall 3..."
+              placeholder="e.g. Coordinate with on-site coordinator to pack and distribute 250 meal boxes..."
             />
           </div>
 

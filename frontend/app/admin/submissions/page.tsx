@@ -202,7 +202,11 @@ export default function AdminSubmissionsPage() {
           {submissions.map((sub) => (
             <div
               key={sub.id}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 hover:border-slate-300 transition"
+              className={`bg-white rounded-xl border shadow-xs p-5 transition ${
+                sub.reviewStatus === 'PENDING'
+                  ? 'border-amber-300 border-l-4 border-l-amber-500 bg-amber-50/20'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
             >
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="space-y-2 flex-1">
@@ -211,6 +215,11 @@ export default function AdminSubmissionsPage() {
                       {sub.task?.title || 'Untitled Task'}
                     </h3>
                     <StatusBadge status={sub.reviewStatus} />
+                    {sub.reviewStatus === 'PENDING' && (
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                        Action Required
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-500">
@@ -241,18 +250,24 @@ export default function AdminSubmissionsPage() {
                   )}
                 </div>
 
-                <div className="flex md:flex-col items-end justify-between md:justify-start gap-4 flex-shrink-0 md:min-w-[140px] text-right">
-                  <div>
-                    <span className="text-[11px] text-slate-400 block uppercase font-medium">Logged Hours</span>
-                    <span className="text-lg font-bold text-slate-800">{sub.actualHours} hrs</span>
+                <div className="flex md:flex-col items-end justify-between md:justify-start gap-3 flex-shrink-0 md:min-w-[150px] text-right">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-end space-x-2">
+                      <span className="text-[11px] text-slate-400 uppercase font-medium">Expected:</span>
+                      <span className="text-sm font-semibold text-slate-600">{sub.task?.expectedHours || 0}h</span>
+                    </div>
+                    <div className="flex items-center justify-end space-x-2">
+                      <span className="text-[11px] text-slate-500 uppercase font-bold">Logged:</span>
+                      <span className="text-lg font-bold text-slate-900">{sub.actualHours} hrs</span>
+                    </div>
                   </div>
 
                   {sub.reviewStatus === 'APPROVED' && (
-                    <div>
-                      <span className="text-[11px] text-emerald-600 block uppercase font-semibold">
+                    <div className="bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                      <span className="text-[10px] text-emerald-700 block uppercase font-bold tracking-wider">
                         Official Hours
                       </span>
-                      <span className="text-xl font-black text-emerald-600">+{sub.approvedHours} hrs</span>
+                      <span className="text-xl font-black text-emerald-700">+{sub.approvedHours} hrs</span>
                     </div>
                   )}
 
@@ -260,13 +275,13 @@ export default function AdminSubmissionsPage() {
                     <div className="flex space-x-2 pt-2">
                       <button
                         onClick={() => openApproveModal(sub)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => openRejectModal(sub)}
-                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+                        className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
                       >
                         Reject
                       </button>

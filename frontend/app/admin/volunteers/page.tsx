@@ -305,7 +305,7 @@ export default function AdminVolunteersPage() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="Jane Doe"
+              placeholder="Pooja Sharma"
             />
           </div>
 
@@ -319,7 +319,7 @@ export default function AdminVolunteersPage() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="jane@example.com"
+              placeholder="pooja.sharma@example.com"
             />
           </div>
 
@@ -347,7 +347,7 @@ export default function AdminVolunteersPage() {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="+1 555-0199"
+              placeholder="+91 98220 12345"
             />
           </div>
 
@@ -360,7 +360,7 @@ export default function AdminVolunteersPage() {
               value={formData.skills}
               onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
               className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900"
-              placeholder="Teaching, First Aid, Logistics"
+              placeholder="Primary Tutoring, First Aid, Event Logistics"
             />
           </div>
 

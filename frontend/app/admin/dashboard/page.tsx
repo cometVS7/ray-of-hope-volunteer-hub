@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import api from '../../../lib/api';
+import Link from 'next/link';
 import StatCard from '../../../components/StatCard';
 import StatusBadge from '../../../components/StatusBadge';
 import { AdminDashboardData, VolunteerStatisticsItem } from '../../../types';
@@ -67,39 +68,47 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Overview</h1>
-        <p className="text-xs text-slate-500 mt-1">Live statistics and volunteer activity across the organization.</p>
+        <p className="text-xs text-slate-500 mt-1">
+          Live statistics and volunteer activity for A Ray of Hope Foundation (Pune).
+        </p>
       </div>
 
-      {/* Top Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Top 6 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <StatCard
           title="Total Volunteers"
           value={dashboard.volunteers.total}
-          subtitle={`${dashboard.volunteers.active} Active`}
+          subtitle="Registered NGO Network"
           accentColor="border-l-blue-600"
         />
         <StatCard
           title="Active Volunteers"
           value={dashboard.volunteers.active}
-          subtitle={`${dashboard.volunteers.inactive} Inactive`}
+          subtitle="Ready for Assignments"
           accentColor="border-l-emerald-600"
+        />
+        <StatCard
+          title="Inactive Volunteers"
+          value={dashboard.volunteers.inactive}
+          subtitle="Paused / Pending"
+          accentColor="border-l-slate-400"
         />
         <StatCard
           title="Total Tasks"
           value={dashboard.tasks.total}
-          subtitle={`${dashboard.tasks.submitted} Awaiting Review`}
+          subtitle={`${dashboard.tasks.assigned} Assigned`}
           accentColor="border-l-indigo-600"
         />
         <StatCard
           title="Pending Reviews"
           value={dashboard.submissions.pending}
-          subtitle="Awaiting admin action"
+          subtitle="Awaiting Verification"
           accentColor="border-l-amber-500"
         />
         <StatCard
-          title="Official Hours"
+          title="Official Service Hours"
           value={`${dashboard.serviceHours.official} hrs`}
-          subtitle="Verified Service Hours"
+          subtitle="Dynamically Verified"
           accentColor="border-l-purple-600"
         />
       </div>
@@ -135,9 +144,9 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
             <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Recent Tasks</h2>
-            <a href="/admin/tasks" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+            <Link href="/admin/tasks" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
               View all →
-            </a>
+            </Link>
           </div>
           <div className="divide-y divide-slate-100">
             {dashboard.recentTasks.length === 0 ? (
@@ -145,13 +154,13 @@ export default function AdminDashboardPage() {
             ) : (
               dashboard.recentTasks.map((t) => (
                 <div key={t.id} className="p-4 hover:bg-slate-50 transition flex items-center justify-between">
-                  <div>
+                  <div className="space-y-0.5">
                     <p className="text-sm font-medium text-slate-900">{t.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500">
                       Assigned to: <span className="text-slate-700 font-medium">{t.volunteer.name}</span> (
                       {t.volunteer.volunteerId || 'No ID'})
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-400">
                       Deadline: {new Date(t.deadline).toLocaleDateString()}
                     </p>
                   </div>
@@ -167,10 +176,10 @@ export default function AdminDashboardPage() {
         {/* Volunteer Statistics */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Volunteer Statistics</h2>
-            <a href="/admin/volunteers" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">Volunteer Leaderboard & Stats</h2>
+            <Link href="/admin/volunteers" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
               Manage →
-            </a>
+            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
@@ -190,7 +199,7 @@ export default function AdminDashboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  volunteers.slice(0, 5).map((v) => (
+                  volunteers.slice(0, 8).map((v) => (
                     <tr key={v.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900">{v.name}</p>
