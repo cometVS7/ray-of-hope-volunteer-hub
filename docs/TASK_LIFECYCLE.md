@@ -52,25 +52,44 @@ stateDiagram-v2
   - A volunteer cannot submit a task twice (`409 Conflict`).
   - Volunteers can view their submission via `GET /api/volunteer/tasks/:id/submission`.
 
-### Step 3: Administrative Review (Admin) — [PLANNED: Milestone 6]
-- **Status**: Not implemented in Milestone 5. Scheduled for Milestone 6.
-- Admin review workflow (future milestone):
-  - Admin views all tasks with `status = SUBMITTED` in the submissions review queue.
-  - Admin inspects the volunteer's completion notes and claimed `actualHours`.
-  - Admin outcomes:
-    1. **APPROVE**:
-       - Status updates to **`APPROVED`**.
-       - Admin sets `approvedHours` (defaults to `actualHours`).
-       - Service Hours Crediting: The `approvedHours` dynamically contribute to the volunteer's total verified service hours.
-    2. **REJECT**:
-       - Status updates to **`REJECTED`**.
-       - Admin provides mandatory `reviewNotes` explaining what needs improvement.
-       - 0 hours are credited. The volunteer can view the feedback and resubmit.
+### Step 3: Administrative Review (Admin) — [IMPLEMENTED: Milestone 6]
+- Admin views submissions queue via `GET /api/admin/submissions` (filterable by `reviewStatus` and `volunteerId`).
+- Admin inspects complete submission details via `GET /api/admin/submissions/:id`.
+- Review Outcomes (must operate strictly on `PENDING` submissions; double review returns `409 Conflict`):
+  1. **APPROVE (`PATCH /api/admin/submissions/:id/approve`)**:
+     - Requires positive finite `approvedHours` bounded by:
+       `approvedHours <= actualHours` AND `approvedHours <= task.expectedHours`.
+     - Optional trimmed `reviewNotes`.
+     - Atomically updates:
+       - `TaskSubmission.reviewStatus = APPROVED`
+       - `TaskSubmission.approvedHours = requested approved hours`
+       - `TaskSubmission.reviewedById = authenticated admin ID`
+       - `TaskSubmission.reviewedAt = now()`
+       - `Task.status = APPROVED`
+     - **Service Hours Crediting**: The approved hours dynamically contribute to the volunteer's official service hours.
+  2. **REJECT (`PATCH /api/admin/submissions/:id/reject`)**:
+     - Requires non-empty trimmed `reviewNotes` explaining why work was rejected.
+     - Atomically updates:
+       - `TaskSubmission.reviewStatus = REJECTED`
+       - `TaskSubmission.approvedHours = 0`
+       - `TaskSubmission.reviewedById = authenticated admin ID`
+       - `TaskSubmission.reviewedAt = now()`
+       - `Task.status = REJECTED`
+     - **0 hours credited**. Rejected submissions never contribute to verified hours.
 
 ---
 
 ## 3. Dynamic Calculation Specification
 
+Official volunteer service hours are NEVER stored as aggregate fields on the `User` record. They are always computed dynamically from approved `TaskSubmission` records:
+
+```sql
+SELECT COALESCE(SUM(approved_hours), 0)
+FROM task_submissions
+WHERE volunteer_id = :volunteer_id
+  AND review_status = 'APPROVED';
 ```
-Total Official Volunteer Hours = SUM(TaskSubmission.approvedHours WHERE volunteerId = :volunteerId AND reviewStatus = 'APPROVED')
-```
+
+### Hours Query Endpoints
+- **Admin**: `GET /api/admin/volunteers/:id/hours`
+- **Volunteer**: `GET /api/volunteer/hours`

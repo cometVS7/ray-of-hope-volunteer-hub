@@ -330,6 +330,192 @@ All endpoints in this group require authentication and `ADMIN` role (`authentica
 - **Error Responses**:
   - `404 Not Found`: Task not found.
 
+### `GET /api/admin/submissions`
+- **Description**: List task submissions with optional reviewStatus and volunteerId filtering, ordered newest first.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Query Params**:
+  - `reviewStatus`: Optional filter (`PENDING` | `APPROVED` | `REJECTED`).
+  - `volunteerId`: Optional volunteer user UUID or `volunteerId` (e.g. `ARH-VOL-001`).
+  - `page`: Page number (default: `1`).
+  - `limit`: Items per page (default: `10`, max: `100`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Submissions retrieved successfully",
+    "data": {
+      "submissions": [
+        {
+          "id": "sub-uuid-1234",
+          "task": {
+            "id": "task-uuid-1",
+            "title": "Community Outreach",
+            "expectedHours": 4,
+            "status": "SUBMITTED"
+          },
+          "volunteer": {
+            "id": "vol-uuid-1",
+            "name": "Jane Doe",
+            "volunteerId": "ARH-VOL-001"
+          },
+          "actualHours": 4,
+          "completionNotes": "Completed outreach.",
+          "submittedAt": "2026-09-16T10:00:00.000Z",
+          "reviewStatus": "PENDING",
+          "approvedHours": 0,
+          "reviewNotes": null,
+          "reviewedAt": null,
+          "createdAt": "2026-09-16T10:00:00.000Z",
+          "updatedAt": "2026-09-16T10:00:00.000Z"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 1,
+        "totalPages": 1
+      }
+    }
+  }
+  ```
+
+### `GET /api/admin/submissions/:id`
+- **Description**: Retrieve complete submission details including full task, volunteer, and reviewer details.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Submission retrieved successfully",
+    "data": {
+      "id": "sub-uuid-1234",
+      "task": {
+        "id": "task-uuid-1",
+        "title": "Community Outreach",
+        "description": "Outreach activity details",
+        "expectedHours": 4,
+        "assignmentDate": "2026-09-20T00:00:00.000Z",
+        "deadline": "2026-09-25T00:00:00.000Z",
+        "status": "SUBMITTED"
+      },
+      "volunteer": {
+        "id": "vol-uuid-1",
+        "name": "Jane Doe",
+        "email": "jane@rayofhope.org",
+        "volunteerId": "ARH-VOL-001",
+        "phone": "+91 98765 43210"
+      },
+      "actualHours": 4,
+      "completionNotes": "Completed outreach.",
+      "submittedAt": "2026-09-16T10:00:00.000Z",
+      "reviewStatus": "PENDING",
+      "approvedHours": 0,
+      "reviewNotes": null,
+      "reviewedBy": null,
+      "reviewedById": null,
+      "reviewedAt": null,
+      "createdAt": "2026-09-16T10:00:00.000Z",
+      "updatedAt": "2026-09-16T10:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `404 Not Found`: Submission not found.
+
+### `PATCH /api/admin/submissions/:id/approve`
+- **Description**: Admin approves a pending task submission, setting official `approvedHours` and transitioning both submission and task to `APPROVED` in an atomic transaction.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Request Body**:
+  ```json
+  {
+    "approvedHours": 4,
+    "reviewNotes": "Verified completion of the assigned activity."
+  }
+  ```
+  - `approvedHours`: Required, finite number > 0. Must NOT exceed `actualHours` OR `task.expectedHours`.
+  - `reviewNotes`: Optional string. Whitespace is trimmed.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task submission approved successfully",
+    "data": {
+      "id": "sub-uuid-1234",
+      "task": {
+        "id": "task-uuid-1",
+        "title": "Community Outreach",
+        "status": "APPROVED"
+      },
+      "reviewStatus": "APPROVED",
+      "approvedHours": 4,
+      "reviewNotes": "Verified completion of the assigned activity.",
+      "reviewedById": "admin-uuid-1",
+      "reviewedAt": "2026-09-16T12:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing/invalid `approvedHours`, `approvedHours <= 0`, `approvedHours > actualHours`, or `approvedHours > task.expectedHours`.
+  - `404 Not Found`: Submission does not exist.
+  - `409 Conflict`: Submission has already been reviewed (`APPROVED` or `REJECTED`).
+
+### `PATCH /api/admin/submissions/:id/reject`
+- **Description**: Admin rejects a pending task submission with mandatory feedback notes, setting `approvedHours = 0` and transitioning both submission and task to `REJECTED` in an atomic transaction.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Request Body**:
+  ```json
+  {
+    "reviewNotes": "Completion evidence was insufficient."
+  }
+  ```
+  - `reviewNotes`: Required, non-empty trimmed string.
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task submission rejected successfully",
+    "data": {
+      "id": "sub-uuid-1234",
+      "task": {
+        "id": "task-uuid-1",
+        "title": "Community Outreach",
+        "status": "REJECTED"
+      },
+      "reviewStatus": "REJECTED",
+      "approvedHours": 0,
+      "reviewNotes": "Completion evidence was insufficient.",
+      "reviewedById": "admin-uuid-1",
+      "reviewedAt": "2026-09-16T12:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing or empty `reviewNotes`.
+  - `404 Not Found`: Submission does not exist.
+  - `409 Conflict`: Submission has already been reviewed (`APPROVED` or `REJECTED`).
+
+### `GET /api/admin/volunteers/:id/hours`
+- **Description**: Dynamically calculates official verified service hours for a volunteer from approved submissions.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer official hours retrieved successfully",
+    "data": {
+      "volunteer": {
+        "id": "vol-uuid-1",
+        "name": "Jane Doe",
+        "volunteerId": "ARH-VOL-001"
+      },
+      "officialServiceHours": 12,
+      "approvedSubmissions": 3
+    }
+  }
+  ```
+- **Error Responses**:
+  - `404 Not Found`: Volunteer not found.
+
 ---
 
 ## 4. Volunteer Endpoints (`/api/volunteer`)
@@ -442,7 +628,7 @@ All endpoints in this group require authentication and `VOLUNTEER` role (`authen
   - `409 Conflict`: Task has already been submitted (`"Task has already been submitted"`).
 
 ### `GET /api/volunteer/tasks/:id/submission`
-- **Description**: View submission details for an assigned task owned by the authenticated volunteer.
+- **Description**: View submission details for an assigned task owned by the authenticated volunteer. When reviewed by admin, includes review status, approved hours, review notes, and reviewedAt.
 - **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
 - **Success Response (200 OK)**:
   ```json
@@ -456,17 +642,17 @@ All endpoints in this group require authentication and `VOLUNTEER` role (`authen
       "actualHours": 4,
       "completionNotes": "Completed the assigned community outreach activity and assisted with volunteer coordination.",
       "submittedAt": "2026-09-16T10:00:00.000Z",
-      "reviewStatus": "PENDING",
-      "approvedHours": 0,
-      "reviewNotes": null,
-      "reviewedById": null,
-      "reviewedAt": null,
+      "reviewStatus": "APPROVED",
+      "approvedHours": 4,
+      "reviewNotes": "Verified completion of the assigned activity.",
+      "reviewedById": "admin-uuid-1",
+      "reviewedAt": "2026-09-16T12:00:00.000Z",
       "createdAt": "2026-09-16T10:00:00.000Z",
-      "updatedAt": "2026-09-16T10:00:00.000Z",
+      "updatedAt": "2026-09-16T12:00:00.000Z",
       "task": {
         "id": "c1f7a0a1-4ba2-47d3-9584-...",
         "title": "Community Outreach",
-        "status": "SUBMITTED"
+        "status": "APPROVED"
       }
     }
   }
@@ -475,3 +661,22 @@ All endpoints in this group require authentication and `VOLUNTEER` role (`authen
   - `401 Unauthorized`: Unauthenticated request.
   - `403 Forbidden`: Task belongs to another volunteer.
   - `404 Not Found`: Task does not exist, or submission has not been created yet for this task.
+
+### `GET /api/volunteer/hours`
+- **Description**: Retrieves official verified service hours for the authenticated volunteer. Calculated dynamically: `SUM(approvedHours) WHERE volunteerId = req.user.userId AND reviewStatus = 'APPROVED'`.
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Official service hours retrieved successfully",
+    "data": {
+      "officialServiceHours": 12,
+      "approvedSubmissions": 3
+    }
+  }
+  ```
+- **Error Responses**:
+  - `401 Unauthorized`: Unauthenticated request.
+  - `403 Forbidden`: Caller is not a volunteer.
+

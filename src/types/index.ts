@@ -178,6 +178,101 @@ export interface SubmitTaskResponseData {
 }
 
 
+export interface SubmissionQueryFilters {
+  reviewStatus?: import('@prisma/client').ReviewStatus;
+  volunteerId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SafeSubmissionListItem {
+  id: string;
+  task: {
+    id: string;
+    title: string;
+    expectedHours: number;
+    status: import('@prisma/client').TaskStatus;
+  };
+  volunteer: {
+    id: string;
+    name: string;
+    volunteerId: string | null;
+  };
+  actualHours: number;
+  completionNotes: string;
+  submittedAt: Date;
+  reviewStatus: import('@prisma/client').ReviewStatus;
+  approvedHours: number;
+  reviewNotes?: string | null;
+  reviewedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SubmissionListResponse {
+  submissions: SafeSubmissionListItem[];
+  pagination: PaginationMeta;
+}
+
+export interface SafeSubmissionDetail {
+  id: string;
+  task: {
+    id: string;
+    title: string;
+    description: string;
+    expectedHours: number;
+    assignmentDate: Date;
+    deadline: Date;
+    status: import('@prisma/client').TaskStatus;
+  };
+  volunteer: {
+    id: string;
+    name: string;
+    email: string;
+    volunteerId: string | null;
+    phone: string | null;
+  };
+  actualHours: number;
+  completionNotes: string;
+  submittedAt: Date;
+  reviewStatus: import('@prisma/client').ReviewStatus;
+  approvedHours: number;
+  reviewNotes?: string | null;
+  reviewedBy?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  reviewedById?: string | null;
+  reviewedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ApproveSubmissionInput {
+  approvedHours: number;
+  reviewNotes?: string;
+}
+
+export interface RejectSubmissionInput {
+  reviewNotes: string;
+}
+
+export interface VolunteerHoursResponse {
+  officialServiceHours: number;
+  approvedSubmissions: number;
+}
+
+export interface AdminVolunteerHoursResponse {
+  volunteer: {
+    id: string;
+    name: string;
+    volunteerId: string | null;
+  };
+  officialServiceHours: number;
+  approvedSubmissions: number;
+}
+
 // Extend Express Request interface globally
 declare global {
   namespace Express {

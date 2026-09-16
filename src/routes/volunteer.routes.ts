@@ -1,10 +1,22 @@
 import { Router } from 'express';
 import taskController from '../controllers/task.controller.js';
+import taskReviewController from '../controllers/task-review.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireVolunteer } from '../middlewares/role.middleware.js';
 
 const router = Router();
 
+// ==========================================
+// VOLUNTEER SERVICE HOURS
+// ==========================================
+// GET /api/volunteer/hours - View own verified official service hours
+router.get('/hours', authenticate, requireVolunteer, (req, res, next) => {
+  taskReviewController.getMyVolunteerHours(req, res, next);
+});
+
+// ==========================================
+// VOLUNTEER TASK ROUTES
+// ==========================================
 // Enforce authentication and Volunteer-only RBAC for all volunteer task routes
 router.use('/tasks', authenticate, requireVolunteer);
 
@@ -29,3 +41,4 @@ router.get('/tasks/:id/submission', (req, res, next) => {
 });
 
 export default router;
+

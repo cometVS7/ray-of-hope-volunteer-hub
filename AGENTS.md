@@ -47,6 +47,15 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 - `POST /api/volunteer/tasks/:id/submit`: Authenticated volunteer submits an assigned task with `actualHours` (0 < hours <= 24) and non-empty `completionNotes`. Atomically creates `TaskSubmission` (`reviewStatus = PENDING`, `approvedHours = 0`, server-generated `submittedAt`) and transitions `Task.status` to `SUBMITTED`. Prevents duplicate submission (409 Conflict) and cross-volunteer access (403 Forbidden).
 - `GET /api/volunteer/tasks/:id/submission`: Authenticated volunteer retrieves their submission for an assigned task. Returns `403 Forbidden` if assigned to another volunteer, `404 Not Found` if no submission exists.
 
+## Implemented Admin Review & Official Service Hours (Milestone 6)
+- `GET /api/admin/submissions`: Admin lists task submissions with filtering (`reviewStatus`, `volunteerId`) and pagination.
+- `GET /api/admin/submissions/:id`: Admin retrieves single submission details with task, volunteer, and review metadata.
+- `PATCH /api/admin/submissions/:id/approve`: Admin approves pending submission with `approvedHours` (bounded by `actualHours` and `expectedHours`) and optional `reviewNotes`. Atomically sets `reviewStatus = APPROVED`, `Task.status = APPROVED`. Prevents double review (409 Conflict).
+- `PATCH /api/admin/submissions/:id/reject`: Admin rejects pending submission with mandatory `reviewNotes`. Atomically sets `reviewStatus = REJECTED`, `approvedHours = 0`, `Task.status = REJECTED`. Prevents double review (409 Conflict).
+- `GET /api/admin/volunteers/:id/hours`: Admin retrieves dynamic verified official service hours for a volunteer (`SUM(approvedHours) WHERE reviewStatus = APPROVED`).
+- `GET /api/volunteer/hours`: Authenticated volunteer retrieves their own verified official service hours.
+
+
 ## Directory Layout
 - `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).
 - `src/controllers/`: Express request handlers (`auth.controller.ts`, `volunteer.controller.ts`, `task.controller.ts`).
