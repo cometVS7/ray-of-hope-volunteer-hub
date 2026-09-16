@@ -127,6 +127,52 @@ export class TaskController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/volunteer/tasks/:id/submit
+   * Submit a completed task for review.
+   */
+  public async submitTask(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.userId) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const { id } = req.params;
+      const volunteerUserId = req.user.userId;
+      const { actualHours, completionNotes } = req.body;
+
+      const result = await taskService.submitTask(id, volunteerUserId, {
+        actualHours,
+        completionNotes,
+      });
+
+      sendSuccess(res, result, 'Task submitted successfully for review', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /api/volunteer/tasks/:id/submission
+   * Retrieve submission details for an assigned task.
+   */
+  public async getVolunteerSubmission(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.userId) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const { id } = req.params;
+      const volunteerUserId = req.user.userId;
+
+      const submission = await taskService.getVolunteerSubmission(id, volunteerUserId);
+
+      sendSuccess(res, submission, 'Task submission retrieved successfully', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const taskController = new TaskController();

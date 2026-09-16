@@ -400,22 +400,78 @@ All endpoints in this group require authentication and `VOLUNTEER` role (`authen
   - `404 Not Found`: Task does not exist.
 
 ### `POST /api/volunteer/tasks/:id/submit`
-- **Description**: Submit a completed task for review.
-- **Access**: Volunteer only.
+- **Description**: Submit a completed assigned task for administrative review. Atomically transitions `Task.status` from `ASSIGNED` to `SUBMITTED` and creates a `TaskSubmission` with `reviewStatus = 'PENDING'` and `approvedHours = 0`.
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
 - **Request Body**:
   ```json
   {
-    "actualHours": 4.5,
-    "completionNotes": "Distributed food packets to 35 families and organized the inventory."
+    "actualHours": 4,
+    "completionNotes": "Completed the assigned community outreach activity and assisted with volunteer coordination."
   }
   ```
+  - `actualHours`: Required, positive finite number (`0 < actualHours <= 24`).
+  - `completionNotes`: Required, non-empty trimmed string.
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task submitted successfully for review",
+    "data": {
+      "task": {
+        "id": "c1f7a0a1-4ba2-47d3-9584-...",
+        "title": "Community Outreach",
+        "status": "SUBMITTED"
+      },
+      "submission": {
+        "id": "sub-uuid-1234",
+        "taskId": "c1f7a0a1-4ba2-47d3-9584-...",
+        "actualHours": 4,
+        "completionNotes": "Completed the assigned community outreach activity and assisted with volunteer coordination.",
+        "submittedAt": "2026-09-16T10:00:00.000Z",
+        "reviewStatus": "PENDING",
+        "approvedHours": 0
+      }
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing `actualHours`, `actualHours <= 0`, `actualHours > 24`, missing/empty `completionNotes`, or task status is not `ASSIGNED`.
+  - `401 Unauthorized`: Unauthenticated request.
+  - `403 Forbidden`: Authenticated volunteer does not own this task, or caller is not a volunteer.
+  - `404 Not Found`: Task does not exist.
+  - `409 Conflict`: Task has already been submitted (`"Task has already been submitted"`).
 
-### `PATCH /api/volunteer/tasks/:id/status`
-- **Description**: Mark an assigned task as `IN_PROGRESS`.
-- **Access**: Volunteer only.
-- **Request Body**:
+### `GET /api/volunteer/tasks/:id/submission`
+- **Description**: View submission details for an assigned task owned by the authenticated volunteer.
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
+- **Success Response (200 OK)**:
   ```json
   {
-    "status": "IN_PROGRESS"
+    "success": true,
+    "message": "Task submission retrieved successfully",
+    "data": {
+      "id": "sub-uuid-1234",
+      "taskId": "c1f7a0a1-4ba2-47d3-9584-...",
+      "volunteerId": "vol-uuid-5678",
+      "actualHours": 4,
+      "completionNotes": "Completed the assigned community outreach activity and assisted with volunteer coordination.",
+      "submittedAt": "2026-09-16T10:00:00.000Z",
+      "reviewStatus": "PENDING",
+      "approvedHours": 0,
+      "reviewNotes": null,
+      "reviewedById": null,
+      "reviewedAt": null,
+      "createdAt": "2026-09-16T10:00:00.000Z",
+      "updatedAt": "2026-09-16T10:00:00.000Z",
+      "task": {
+        "id": "c1f7a0a1-4ba2-47d3-9584-...",
+        "title": "Community Outreach",
+        "status": "SUBMITTED"
+      }
+    }
   }
   ```
+- **Error Responses**:
+  - `401 Unauthorized`: Unauthenticated request.
+  - `403 Forbidden`: Task belongs to another volunteer.
+  - `404 Not Found`: Task does not exist, or submission has not been created yet for this task.

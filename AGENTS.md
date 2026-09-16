@@ -43,6 +43,10 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 - `GET /api/volunteer/tasks`: Authenticated volunteer lists only tasks assigned to themselves (derived from `req.user.userId`).
 - `GET /api/volunteer/tasks/:id`: Authenticated volunteer retrieves details of their assigned task. Returns `403 Forbidden` if assigned to another volunteer.
 
+## Implemented Volunteer Task Submission (Milestone 5)
+- `POST /api/volunteer/tasks/:id/submit`: Authenticated volunteer submits an assigned task with `actualHours` (0 < hours <= 24) and non-empty `completionNotes`. Atomically creates `TaskSubmission` (`reviewStatus = PENDING`, `approvedHours = 0`, server-generated `submittedAt`) and transitions `Task.status` to `SUBMITTED`. Prevents duplicate submission (409 Conflict) and cross-volunteer access (403 Forbidden).
+- `GET /api/volunteer/tasks/:id/submission`: Authenticated volunteer retrieves their submission for an assigned task. Returns `403 Forbidden` if assigned to another volunteer, `404 Not Found` if no submission exists.
+
 ## Directory Layout
 - `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).
 - `src/controllers/`: Express request handlers (`auth.controller.ts`, `volunteer.controller.ts`, `task.controller.ts`).

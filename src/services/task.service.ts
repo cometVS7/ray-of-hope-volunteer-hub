@@ -1,13 +1,17 @@
-import { Prisma, Role, TaskStatus, UserStatus } from '@prisma/client';
+import { Prisma, ReviewStatus, Role, TaskStatus, UserStatus } from '@prisma/client';
 import prisma from '../config/database.js';
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   NotFoundError,
 } from '../utils/app-error.js';
 import {
   CreateTaskInput,
   SafeTask,
+  SafeTaskSubmission,
+  SubmitTaskInput,
+  SubmitTaskResponseData,
   TaskListResponse,
   TaskQueryFilters,
   VolunteerTaskQueryFilters,
@@ -295,6 +299,185 @@ export class TaskService {
     }
 
     return task as SafeTask;
+  }
+
+  /**
+   * Submits a completed task for administrative review.
+   * Atomically transitions task from ASSIGNED to SUBMITTED and creates TaskSubmission.
+   */
+  public async submitTask(
+    taskId: string,
+    volunteerUserId: string,
+    input: SubmitTaskInput
+  ): Promise<SubmitTaskResponseData> {
+    if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
+      throw new BadRequestError('Task ID parameter is required');
+    }
+
+    const { actualHours, completionNotes } = input;
+
+    // Validate actualHours
+    if (actualHours === undefined || actualHours === null) {
+      throw new BadRequestError('actualHours is required');
+    }
+
+    const hours = Number(actualHours);
+    if (typeof actualHours !== 'number' || isNaN(hours) || !isFinite(hours)) {
+      throw new BadRequestError('actualHours must be a valid number');
+    }
+
+    if (hours <= 0) {
+      throw new BadRequestError('actualHours must be greater than 0');
+    }
+
+    if (hours > 24) {
+      throw new BadRequestError('actualHours cannot exceed 24 hours');
+    }
+
+    // Validate completionNotes
+    if (completionNotes === undefined || completionNotes === null || typeof completionNotes !== 'string') {
+      throw new BadRequestError('completionNotes is required');
+    }
+
+    const trimmedNotes = completionNotes.trim();
+    if (trimmedNotes === '') {
+      throw new BadRequestError('completionNotes cannot be empty');
+    }
+
+    // Retrieve task with existing submission to verify ownership and state
+    const task = await prisma.task.findUnique({
+      where: { id: taskId.trim() },
+      include: { submission: true },
+    });
+
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+
+    // Data isolation: task must belong to the authenticated volunteer
+    if (task.assignedToId !== volunteerUserId) {
+      throw new ForbiddenError('Access forbidden: task belongs to another volunteer');
+    }
+
+    // Check duplicate submission
+    if (task.status === TaskStatus.SUBMITTED || task.submission !== null) {
+      throw new ConflictError('Task has already been submitted');
+    }
+
+    // Task lifecycle check: only ASSIGNED tasks can be submitted
+    if (task.status !== TaskStatus.ASSIGNED) {
+      throw new BadRequestError('Only ASSIGNED tasks can be submitted');
+    }
+
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const submission = await tx.taskSubmission.create({
+          data: {
+            taskId: task.id,
+            volunteerId: volunteerUserId,
+            actualHours: hours,
+            completionNotes: trimmedNotes,
+            reviewStatus: ReviewStatus.PENDING,
+            approvedHours: 0.0,
+            reviewNotes: null,
+            reviewedById: null,
+            reviewedAt: null,
+          },
+          select: {
+            id: true,
+            taskId: true,
+            actualHours: true,
+            completionNotes: true,
+            submittedAt: true,
+            reviewStatus: true,
+            approvedHours: true,
+          },
+        });
+
+        const updatedTask = await tx.task.update({
+          where: { id: task.id },
+          data: {
+            status: TaskStatus.SUBMITTED,
+          },
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        });
+
+        return {
+          task: updatedTask,
+          submission,
+        };
+      });
+
+      return result;
+    } catch (error: any) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictError('Task has already been submitted');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieves the submission details for a task owned by the authenticated volunteer.
+   */
+  public async getVolunteerSubmission(
+    taskId: string,
+    volunteerUserId: string
+  ): Promise<SafeTaskSubmission> {
+    if (!taskId || typeof taskId !== 'string' || taskId.trim() === '') {
+      throw new BadRequestError('Task ID parameter is required');
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId.trim() },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        assignedToId: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+
+    if (task.assignedToId !== volunteerUserId) {
+      throw new ForbiddenError('Access forbidden: task belongs to another volunteer');
+    }
+
+    const submission = await prisma.taskSubmission.findUnique({
+      where: { taskId: task.id },
+    });
+
+    if (!submission) {
+      throw new NotFoundError('Submission not found for this task');
+    }
+
+    return {
+      id: submission.id,
+      taskId: submission.taskId,
+      volunteerId: submission.volunteerId,
+      actualHours: submission.actualHours,
+      completionNotes: submission.completionNotes,
+      submittedAt: submission.submittedAt,
+      reviewStatus: submission.reviewStatus,
+      approvedHours: submission.approvedHours,
+      reviewNotes: submission.reviewNotes,
+      reviewedById: submission.reviewedById,
+      reviewedAt: submission.reviewedAt,
+      createdAt: submission.createdAt,
+      updatedAt: submission.updatedAt,
+      task: {
+        id: task.id,
+        title: task.title,
+        status: task.status,
+      },
+    };
   }
 }
 

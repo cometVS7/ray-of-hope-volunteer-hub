@@ -18,4 +18,14 @@ router.get('/tasks/:id', (req, res, next) => {
   taskController.getVolunteerTaskById(req, res, next);
 });
 
+// POST /api/volunteer/tasks/:id/submit - Submit completed task for review
+router.post('/tasks/:id/submit', (req, res, next) => {
+  taskController.submitTask(req, res, next);
+});
+
+// GET /api/volunteer/tasks/:id/submission - View submission details for an assigned task
+router.get('/tasks/:id/submission', (req, res, next) => {
+  taskController.getVolunteerSubmission(req, res, next);
+});
+
 export default router;

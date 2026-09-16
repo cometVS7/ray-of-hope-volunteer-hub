@@ -134,6 +134,49 @@ export interface TaskListResponse {
   pagination: PaginationMeta;
 }
 
+export interface SubmitTaskInput {
+  actualHours: number;
+  completionNotes: string;
+}
+
+export interface SafeTaskSubmission {
+  id: string;
+  taskId: string;
+  volunteerId: string;
+  actualHours: number;
+  completionNotes: string;
+  submittedAt: Date;
+  reviewStatus: import('@prisma/client').ReviewStatus;
+  approvedHours: number;
+  reviewNotes?: string | null;
+  reviewedById?: string | null;
+  reviewedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  task?: {
+    id: string;
+    title: string;
+    status: import('@prisma/client').TaskStatus;
+  };
+}
+
+export interface SubmitTaskResponseData {
+  task: {
+    id: string;
+    title: string;
+    status: import('@prisma/client').TaskStatus;
+  };
+  submission: {
+    id: string;
+    taskId: string;
+    actualHours: number;
+    completionNotes: string;
+    submittedAt: Date;
+    reviewStatus: import('@prisma/client').ReviewStatus;
+    approvedHours: number;
+  };
+}
+
 
 // Extend Express Request interface globally
 declare global {
