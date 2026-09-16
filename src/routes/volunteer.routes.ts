@@ -1,10 +1,19 @@
 import { Router } from 'express';
 import taskController from '../controllers/task.controller.js';
 import taskReviewController from '../controllers/task-review.controller.js';
+import dashboardController from '../controllers/dashboard.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireVolunteer } from '../middlewares/role.middleware.js';
 
 const router = Router();
+
+// ==========================================
+// VOLUNTEER DASHBOARD
+// ==========================================
+// GET /api/volunteer/dashboard - View personal metrics & recent activity
+router.get('/dashboard', authenticate, requireVolunteer, (req, res, next) => {
+  dashboardController.getVolunteerDashboard(req, res, next);
+});
 
 // ==========================================
 // VOLUNTEER SERVICE HOURS

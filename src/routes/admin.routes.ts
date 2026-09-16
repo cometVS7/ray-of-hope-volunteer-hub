@@ -2,10 +2,32 @@ import { Router } from 'express';
 import volunteerController from '../controllers/volunteer.controller.js';
 import taskController from '../controllers/task.controller.js';
 import taskReviewController from '../controllers/task-review.controller.js';
+import dashboardController from '../controllers/dashboard.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireAdmin } from '../middlewares/role.middleware.js';
 
 const router = Router();
+
+// ==========================================
+// ADMIN DASHBOARD & STATISTICS ROUTES
+// ==========================================
+// Enforce authentication and Admin-only RBAC for all dashboard routes
+router.use('/dashboard', authenticate, requireAdmin);
+
+// GET /api/admin/dashboard - Overall dashboard summary statistics & recent tasks
+router.get('/dashboard', (req, res, next) => {
+  dashboardController.getAdminDashboard(req, res, next);
+});
+
+// GET /api/admin/dashboard/volunteers - Volunteer-level statistics
+router.get('/dashboard/volunteers', (req, res, next) => {
+  dashboardController.getAdminVolunteerStats(req, res, next);
+});
+
+// GET /api/admin/dashboard/tasks - Task statistics breakdown for charts/cards
+router.get('/dashboard/tasks', (req, res, next) => {
+  dashboardController.getAdminTaskStats(req, res, next);
+});
 
 // ==========================================
 // ADMIN VOLUNTEER MANAGEMENT ROUTES

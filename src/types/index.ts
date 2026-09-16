@@ -273,6 +273,87 @@ export interface AdminVolunteerHoursResponse {
   approvedSubmissions: number;
 }
 
+export interface RecentTaskItem {
+  id: string;
+  title: string;
+  volunteer: {
+    name: string;
+    volunteerId: string | null;
+  };
+  status: import('@prisma/client').TaskStatus;
+  assignmentDate: Date;
+  deadline: Date;
+  createdAt: Date;
+}
+
+export interface AdminDashboardResponse {
+  volunteers: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+  tasks: {
+    total: number;
+    assigned: number;
+    submitted: number;
+    approved: number;
+    rejected: number;
+  };
+  submissions: {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  serviceHours: {
+    official: number;
+  };
+  recentTasks: RecentTaskItem[];
+}
+
+export interface VolunteerStatisticsItem {
+  id: string;
+  name: string;
+  volunteerId: string | null;
+  status: import('@prisma/client').UserStatus;
+  taskCount: number;
+  approvedTaskCount: number;
+  pendingTaskCount: number;
+  rejectedTaskCount: number;
+  officialServiceHours: number;
+}
+
+export interface AdminTaskStatisticsResponse {
+  total: number;
+  byStatus: {
+    ASSIGNED: number;
+    SUBMITTED: number;
+    APPROVED: number;
+    REJECTED: number;
+  };
+  recentTasks: RecentTaskItem[];
+}
+
+export interface VolunteerDashboardResponse {
+  volunteer: {
+    id: string;
+    name: string;
+    volunteerId: string | null;
+  };
+  tasks: {
+    total: number;
+    assigned: number;
+    submitted: number;
+    approved: number;
+    rejected: number;
+  };
+  serviceHours: {
+    official: number;
+  };
+  pendingReviews: number;
+  recentTasks: RecentTaskItem[];
+}
+
 // Extend Express Request interface globally
 declare global {
   namespace Express {
@@ -281,3 +362,4 @@ declare global {
     }
   }
 }
+

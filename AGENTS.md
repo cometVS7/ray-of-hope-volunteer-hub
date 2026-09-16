@@ -55,6 +55,21 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 - `GET /api/admin/volunteers/:id/hours`: Admin retrieves dynamic verified official service hours for a volunteer (`SUM(approvedHours) WHERE reviewStatus = APPROVED`).
 - `GET /api/volunteer/hours`: Authenticated volunteer retrieves their own verified official service hours.
 
+## Implemented Dashboard & Statistics + Functional Frontend UI (Milestone 7)
+- **Part A — Database-Backed Dashboard APIs**:
+  - `GET /api/admin/dashboard`: Organization-wide KPI metrics (`volunteers`, `tasks`, `submissions`, `serviceHours.official`, `recentTasks`).
+  - `GET /api/admin/dashboard/volunteers`: Per-volunteer breakdown (`taskCount`, `approvedTaskCount`, `pendingTaskCount`, `rejectedTaskCount`, dynamic `officialServiceHours`).
+  - `GET /api/admin/dashboard/tasks`: Task status distribution counts (`assigned`, `submitted`, `approved`, `rejected`, `total`).
+  - `GET /api/volunteer/dashboard`: Authenticated volunteer personal metrics (`tasks` breakdown, `serviceHours.official`, `pendingReviews`, `recentTasks`).
+- **Part B — Functional Next.js Frontend (`frontend/`)**:
+  - Modern Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4 setup.
+  - Role-aware authentication context with token persistence (`localStorage`) and auto-restoration via `/api/auth/me`.
+  - Unified `/login` page with demo credentials helper.
+  - Admin Portal (`/admin/dashboard`, `/admin/volunteers`, `/admin/tasks`, `/admin/submissions`) with status badges, search, pagination, create volunteer/task modals, and approve/reject submission modals.
+  - Volunteer Portal (`/volunteer/dashboard`, `/volunteer/tasks`) with verified hours highlight, task submission modal, and feedback view.
+  - Handoff-ready for teammate UI enhancement via `21st.dev` (`docs/FRONTEND_DEVELOPMENT.md`).
+
+
 
 ## Directory Layout
 - `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).

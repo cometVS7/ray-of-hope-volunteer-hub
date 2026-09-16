@@ -516,6 +516,99 @@ All endpoints in this group require authentication and `ADMIN` role (`authentica
 - **Error Responses**:
   - `404 Not Found`: Volunteer not found.
 
+### `GET /api/admin/dashboard`
+- **Description**: Returns overall system metrics (counts for volunteers, tasks, submissions, official hours) and latest 5 tasks. All statistics are calculated directly from the database without storing aggregates.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Admin dashboard statistics retrieved successfully",
+    "data": {
+      "volunteers": {
+        "total": 10,
+        "active": 8,
+        "inactive": 2
+      },
+      "tasks": {
+        "total": 25,
+        "assigned": 8,
+        "submitted": 5,
+        "approved": 10,
+        "rejected": 2
+      },
+      "submissions": {
+        "total": 17,
+        "pending": 5,
+        "approved": 10,
+        "rejected": 2
+      },
+      "serviceHours": {
+        "official": 42.5
+      },
+      "recentTasks": [
+        {
+          "id": "task-uuid-1",
+          "title": "Community Outreach",
+          "volunteer": {
+            "name": "Jane Doe",
+            "volunteerId": "ARH-VOL-001"
+          },
+          "status": "SUBMITTED",
+          "assignmentDate": "2026-09-16T00:00:00.000Z",
+          "deadline": "2026-09-20T00:00:00.000Z",
+          "createdAt": "2026-09-16T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+
+### `GET /api/admin/dashboard/volunteers`
+- **Description**: Returns volunteer-level statistics including task distribution by status and verified official service hours.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer statistics retrieved successfully",
+    "data": [
+      {
+        "id": "vol-uuid-1",
+        "name": "Jane Doe",
+        "volunteerId": "ARH-VOL-001",
+        "status": "ACTIVE",
+        "taskCount": 8,
+        "approvedTaskCount": 5,
+        "pendingTaskCount": 2,
+        "rejectedTaskCount": 1,
+        "officialServiceHours": 18.5
+      }
+    ]
+  }
+  ```
+
+### `GET /api/admin/dashboard/tasks`
+- **Description**: Returns task metrics grouped by status and recent tasks.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task statistics retrieved successfully",
+    "data": {
+      "total": 25,
+      "byStatus": {
+        "ASSIGNED": 8,
+        "SUBMITTED": 5,
+        "APPROVED": 10,
+        "REJECTED": 2
+      },
+      "recentTasks": [ ... ]
+    }
+  }
+  ```
+
 ---
 
 ## 4. Volunteer Endpoints (`/api/volunteer`)
@@ -673,6 +766,52 @@ All endpoints in this group require authentication and `VOLUNTEER` role (`authen
     "data": {
       "officialServiceHours": 12,
       "approvedSubmissions": 3
+    }
+  }
+  ```
+- **Error Responses**:
+  - `401 Unauthorized`: Unauthenticated request.
+  - `403 Forbidden`: Caller is not a volunteer.
+
+### `GET /api/volunteer/dashboard`
+- **Description**: Retrieves personal dashboard metrics for the authenticated volunteer, including task counts by status, official service hours, pending reviews count, and recent 5 tasks.
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Volunteer dashboard retrieved successfully",
+    "data": {
+      "volunteer": {
+        "id": "vol-uuid-1",
+        "name": "Jane Doe",
+        "volunteerId": "ARH-VOL-001"
+      },
+      "tasks": {
+        "total": 10,
+        "assigned": 3,
+        "submitted": 2,
+        "approved": 4,
+        "rejected": 1
+      },
+      "serviceHours": {
+        "official": 18.5
+      },
+      "pendingReviews": 2,
+      "recentTasks": [
+        {
+          "id": "task-uuid-1",
+          "title": "Community Outreach",
+          "volunteer": {
+            "name": "Jane Doe",
+            "volunteerId": "ARH-VOL-001"
+          },
+          "status": "APPROVED",
+          "assignmentDate": "2026-09-16T00:00:00.000Z",
+          "deadline": "2026-09-20T00:00:00.000Z",
+          "createdAt": "2026-09-16T10:00:00.000Z"
+        }
+      ]
     }
   }
   ```
