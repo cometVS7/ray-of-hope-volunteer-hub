@@ -36,12 +36,19 @@ The platform enables NGO administrators to manage volunteers, create and assign 
 - `PATCH /api/admin/volunteers/:id/status`: Admin activates/deactivates a volunteer. Prevents modification of Admin accounts. Hard delete is disabled.
 - Protection: `authenticate` + `requireAdmin` on all `/api/admin/volunteers/*` endpoints.
 
+## Implemented Task Management (Milestone 4)
+- `POST /api/admin/tasks`: Admin creates and assigns a task to an active volunteer. Initial status is `ASSIGNED`. Validates dates, expected hours > 0, and active volunteer role. `createdById` derived from authenticated admin.
+- `GET /api/admin/tasks`: Admin lists all tasks with status filtering, volunteer filtering (`assignedToId`), search (`title`/`description`), and pagination.
+- `GET /api/admin/tasks/:id`: Admin retrieves single task details with safe assigned volunteer and creator details (no `passwordHash`).
+- `GET /api/volunteer/tasks`: Authenticated volunteer lists only tasks assigned to themselves (derived from `req.user.userId`).
+- `GET /api/volunteer/tasks/:id`: Authenticated volunteer retrieves details of their assigned task. Returns `403 Forbidden` if assigned to another volunteer.
+
 ## Directory Layout
 - `src/config/`: Environment configuration (`env.ts`) and Prisma database singleton (`database.ts`).
-- `src/controllers/`: Express request handlers (`auth.controller.ts`, `volunteer.controller.ts`).
-- `src/routes/`: Express route definitions grouped by domain (`auth.routes.ts`, `admin.routes.ts`, `health.routes.ts`, `index.ts`).
+- `src/controllers/`: Express request handlers (`auth.controller.ts`, `volunteer.controller.ts`, `task.controller.ts`).
+- `src/routes/`: Express route definitions grouped by domain (`auth.routes.ts`, `admin.routes.ts`, `volunteer.routes.ts`, `health.routes.ts`, `index.ts`).
 - `src/middlewares/`: JWT verification (`auth.middleware.ts`), RBAC (`role.middleware.ts`), error handling (`error.middleware.ts`).
-- `src/services/`: Business logic (`auth.service.ts`, `volunteer.service.ts`), dynamic hours calculation.
+- `src/services/`: Business logic (`auth.service.ts`, `volunteer.service.ts`, `task.service.ts`), dynamic hours calculation.
 - `src/utils/`: JWT (`jwt.ts`), password hashing (`password.ts`), custom AppError (`app-error.ts`), response formatters (`response.ts`).
 - `src/types/`: TypeScript interfaces and Express Request augmentation.
 - `prisma/`: Prisma schema (`schema.prisma`) and seed (`seed.ts`).

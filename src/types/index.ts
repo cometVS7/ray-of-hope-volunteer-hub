@@ -75,6 +75,65 @@ export interface VolunteerListResponse {
   pagination: PaginationMeta;
 }
 
+export interface CreateTaskInput {
+  title: string;
+  description: string;
+  expectedHours: number;
+  assignmentDate: string | Date;
+  deadline: string | Date;
+  assignedToId: string;
+}
+
+export interface TaskQueryFilters {
+  search?: string;
+  status?: import('@prisma/client').TaskStatus;
+  assignedToId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface VolunteerTaskQueryFilters {
+  search?: string;
+  status?: import('@prisma/client').TaskStatus;
+  page?: number;
+  limit?: number;
+}
+
+export interface SafeTaskVolunteer {
+  id: string;
+  name: string;
+  email: string;
+  volunteerId?: string | null;
+  phone?: string | null;
+}
+
+export interface SafeTaskCreator {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface SafeTask {
+  id: string;
+  title: string;
+  description: string;
+  expectedHours: number;
+  assignmentDate: Date;
+  deadline: Date;
+  status: import('@prisma/client').TaskStatus;
+  assignedToId: string;
+  createdById: string;
+  assignedTo?: SafeTaskVolunteer;
+  createdBy?: SafeTaskCreator;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TaskListResponse {
+  tasks: SafeTask[];
+  pagination: PaginationMeta;
+}
+
 
 // Extend Express Request interface globally
 declare global {

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import volunteerController from '../controllers/volunteer.controller.js';
+import taskController from '../controllers/task.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireAdmin } from '../middlewares/role.middleware.js';
 
@@ -26,6 +27,27 @@ router.get('/volunteers/:id', (req, res, next) => {
 // PATCH /api/admin/volunteers/:id/status - Activate or deactivate a volunteer
 router.patch('/volunteers/:id/status', (req, res, next) => {
   volunteerController.updateVolunteerStatus(req, res, next);
+});
+
+// ==========================================
+// ADMIN TASK MANAGEMENT ROUTES
+// ==========================================
+// Enforce authentication and Admin-only RBAC for all task management routes
+router.use('/tasks', authenticate, requireAdmin);
+
+// POST /api/admin/tasks - Create and assign a task
+router.post('/tasks', (req, res, next) => {
+  taskController.createTask(req, res, next);
+});
+
+// GET /api/admin/tasks - List tasks with filtering and pagination
+router.get('/tasks', (req, res, next) => {
+  taskController.listTasks(req, res, next);
+});
+
+// GET /api/admin/tasks/:id - Get individual task details
+router.get('/tasks/:id', (req, res, next) => {
+  taskController.getTaskById(req, res, next);
 });
 
 export default router;

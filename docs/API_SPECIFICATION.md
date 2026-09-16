@@ -197,81 +197,207 @@ Volunteer requests receive `403 Forbidden`.
 
 ---
 
-## 3. Admin — Task Management & Review (`/api/admin/tasks`, `/api/admin/submissions`)
+## 3. Admin — Task Management (`/api/admin/tasks`)
+
+All endpoints in this group require authentication and `ADMIN` role (`authenticate` + `requireAdmin`).
 
 ### `POST /api/admin/tasks`
-- **Description**: Create a new task and assign it to a volunteer.
-- **Access**: Admin only.
+- **Description**: Create and assign a task to an active volunteer. Initial status is always `ASSIGNED`.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
 - **Request Body**:
   ```json
   {
-    "title": "Weekend Food Pantry Distribution",
-    "description": "Distribute essential groceries to local community families.",
-    "expectedHours": 4.0,
-    "deadline": "2026-09-25T18:00:00.000Z",
-    "assignedToId": "volunteer-uuid"
+    "title": "Community Outreach",
+    "description": "Assist with NGO community outreach activity.",
+    "expectedHours": 4,
+    "assignmentDate": "2026-09-20",
+    "deadline": "2026-09-25",
+    "assignedToId": "550e8400-e29b-41d4-a716-446655440000"
   }
   ```
+  - `title`: Required, non-empty string.
+  - `description`: Required, non-empty string.
+  - `expectedHours`: Required, positive number > 0.
+  - `assignmentDate`: Required, valid date (ISO string or YYYY-MM-DD).
+  - `deadline`: Required, valid date (must not be earlier than `assignmentDate`).
+  - `assignedToId`: Required UUID of an existing, ACTIVE user with `VOLUNTEER` role.
+  - *Note*: `createdById` is automatically populated from the authenticated Admin's JWT.
+- **Success Response (201 Created)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task created and assigned successfully",
+    "data": {
+      "id": "c1f7a0a1-4ba2-47d3-9584-...",
+      "title": "Community Outreach",
+      "description": "Assist with NGO community outreach activity.",
+      "expectedHours": 4,
+      "assignmentDate": "2026-09-20T00:00:00.000Z",
+      "deadline": "2026-09-25T00:00:00.000Z",
+      "status": "ASSIGNED",
+      "assignedToId": "550e8400-e29b-41d4-a716-446655440000",
+      "createdById": "admin-uuid",
+      "assignedTo": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Alex Johnson",
+        "email": "volunteer1@rayofhope.org",
+        "volunteerId": "ARH-VOL-001",
+        "phone": "+1234567890"
+      },
+      "createdBy": {
+        "id": "admin-uuid",
+        "name": "System Admin",
+        "email": "admin@rayofhope.org"
+      },
+      "createdAt": "2026-09-16T08:00:00.000Z",
+      "updatedAt": "2026-09-16T08:00:00.000Z"
+    }
+  }
+  ```
+- **Error Responses**:
+  - `400 Bad Request`: Missing fields, expectedHours <= 0, deadline earlier than assignmentDate, assigned user is not a volunteer, or volunteer is inactive.
+  - `401 Unauthorized`: Missing or invalid JWT.
+  - `403 Forbidden`: Authenticated user is not an Admin.
+  - `404 Not Found`: Assigned volunteer not found.
 
 ### `GET /api/admin/tasks`
-- **Description**: List all tasks across the system with status/volunteer filter.
-- **Access**: Admin only.
-
-### `GET /api/admin/submissions/pending`
-- **Description**: Fetch all task submissions awaiting admin review.
-- **Access**: Admin only.
-
-### `POST /api/admin/submissions/:submissionId/review`
-- **Description**: Approve or reject a volunteer's task submission.
-- **Access**: Admin only.
-- **Request Body (Approve)**:
+- **Description**: List all tasks across the system with filtering, search, and pagination.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Query Params**:
+  - `search`: Filter by task `title` or `description`.
+  - `status`: Filter by status (`ASSIGNED` | `SUBMITTED` | `APPROVED` | `REJECTED`).
+  - `assignedToId`: Filter tasks assigned to a specific volunteer UUID.
+  - `page`: Page number (default: `1`, minimum: `1`).
+  - `limit`: Items per page (default: `20`, maximum: `100`).
+- **Success Response (200 OK)**:
   ```json
   {
-    "action": "APPROVE",
-    "approvedHours": 4.0,
-    "reviewNotes": "Great effort, well documented."
+    "success": true,
+    "message": "Tasks retrieved successfully",
+    "data": {
+      "tasks": [
+        {
+          "id": "c1f7a0a1-4ba2-47d3-9584-...",
+          "title": "Community Outreach",
+          "description": "Assist with NGO community outreach activity.",
+          "expectedHours": 4,
+          "assignmentDate": "2026-09-20T00:00:00.000Z",
+          "deadline": "2026-09-25T00:00:00.000Z",
+          "status": "ASSIGNED",
+          "assignedToId": "550e8400-...",
+          "createdById": "admin-uuid",
+          "assignedTo": { ... },
+          "createdBy": { ... },
+          "createdAt": "...",
+          "updatedAt": "..."
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 1,
+        "totalPages": 1
+      }
+    }
   }
   ```
-- **Request Body (Reject)**:
+- **Error Responses**:
+  - `400 Bad Request`: Invalid status filter or invalid page/limit.
+  - `401 Unauthorized`: Missing or invalid JWT.
+  - `403 Forbidden`: Volunteer role.
+
+### `GET /api/admin/tasks/:id`
+- **Description**: Get single task by UUID.
+- **Access**: Admin only (`authenticate` + `requireAdmin`).
+- **Success Response (200 OK)**:
   ```json
   {
-    "action": "REJECT",
-    "reviewNotes": "Please attach the activity log sheet before hours can be approved."
+    "success": true,
+    "message": "Task retrieved successfully",
+    "data": {
+      "id": "c1f7a0a1-4ba2-47d3-9584-...",
+      "title": "Community Outreach",
+      "description": "Assist with NGO community outreach activity.",
+      "expectedHours": 4,
+      "assignmentDate": "2026-09-20T00:00:00.000Z",
+      "deadline": "2026-09-25T00:00:00.000Z",
+      "status": "ASSIGNED",
+      "assignedTo": { ... },
+      "createdBy": { ... }
+    }
   }
   ```
+- **Error Responses**:
+  - `404 Not Found`: Task not found.
 
 ---
 
-## 4. Admin — Analytics & Overview (`/api/admin/overview`)
+## 4. Volunteer Endpoints (`/api/volunteer`)
 
-### `GET /api/admin/overview`
-- **Description**: High-level metrics for admin dashboard:
-  - Total Active Volunteers
-  - Total Verified Hours Across All Volunteers
-  - Pending Submissions Count
-  - Active / Open Tasks Count
-- **Access**: Admin only.
-
----
-
-## 5. Volunteer Endpoints (`/api/volunteer`)
-
-### `GET /api/volunteer/dashboard`
-- **Description**: Volunteer's dashboard summary:
-  - Total verified/approved service hours
-  - Tasks summary count (Assigned, In Progress, Submitted, Completed, Rejected)
-  - Upcoming deadlines
-- **Access**: Volunteer only.
+All endpoints in this group require authentication and `VOLUNTEER` role (`authenticate` + `requireVolunteer`).
 
 ### `GET /api/volunteer/tasks`
-- **Description**: List tasks assigned to the logged-in volunteer.
-- **Access**: Volunteer only.
+- **Description**: List tasks assigned ONLY to the authenticated volunteer (derived strictly from `req.user.userId`).
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
 - **Query Params**:
-  - `status`: `ASSIGNED` | `IN_PROGRESS` | `SUBMITTED` | `APPROVED` | `REJECTED`
+  - `status`: Optional filter (`ASSIGNED` | `SUBMITTED` | `APPROVED` | `REJECTED`).
+  - `search`: Optional title/description search.
+  - `page`: Page number (default: `1`).
+  - `limit`: Items per page (default: `20`, max: `100`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Assigned tasks retrieved successfully",
+    "data": {
+      "tasks": [
+        {
+          "id": "c1f7a0a1-4ba2-47d3-9584-...",
+          "title": "Community Outreach",
+          "description": "Assist with NGO community outreach activity.",
+          "expectedHours": 4,
+          "assignmentDate": "2026-09-20T00:00:00.000Z",
+          "deadline": "2026-09-25T00:00:00.000Z",
+          "status": "ASSIGNED",
+          "assignedTo": { ... },
+          "createdBy": { ... }
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 1,
+        "totalPages": 1
+      }
+    }
+  }
+  ```
 
 ### `GET /api/volunteer/tasks/:id`
-- **Description**: Details of a specific assigned task with its submission/review details.
-- **Access**: Volunteer only (scoped to own task).
+- **Description**: Get details of an assigned task. Returns `403 Forbidden` if the task is assigned to another volunteer.
+- **Access**: Volunteer only (`authenticate` + `requireVolunteer`).
+- **Success Response (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Task retrieved successfully",
+    "data": {
+      "id": "c1f7a0a1-4ba2-47d3-9584-...",
+      "title": "Community Outreach",
+      "description": "Assist with NGO community outreach activity.",
+      "expectedHours": 4,
+      "assignmentDate": "2026-09-20T00:00:00.000Z",
+      "deadline": "2026-09-25T00:00:00.000Z",
+      "status": "ASSIGNED",
+      "assignedTo": { ... },
+      "createdBy": { ... }
+    }
+  }
+  ```
+- **Error Responses**:
+  - `401 Unauthorized`: Unauthenticated.
+  - `403 Forbidden`: Task belongs to another volunteer.
+  - `404 Not Found`: Task does not exist.
 
 ### `POST /api/volunteer/tasks/:id/submit`
 - **Description**: Submit a completed task for review.
