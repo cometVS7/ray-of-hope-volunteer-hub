@@ -31,3 +31,6 @@ Thumbs.db
 # Prisma artifacts
 prisma/*.db
 prisma/*.db-journal
+
+# Scratch / Temporary Test Scripts
+scratch/

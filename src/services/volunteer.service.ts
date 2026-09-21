@@ -21,6 +21,7 @@ export const safeUserSelect = {
   volunteerId: true,
   phone: true,
   status: true,
+  isMasterAdmin: true,
   createdAt: true,
   updatedAt: true,
 };

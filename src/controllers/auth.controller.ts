@@ -32,6 +32,51 @@ export class AuthController {
       next(error);
     }
   }
+
+  /**
+   * PATCH /api/auth/profile
+   * Updates profile details (name, phone, email) for the authenticated user.
+   */
+  public async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.userId) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const { name, phone, email, currentPassword } = req.body;
+      const result = await authService.updateProfile(req.user.userId, {
+        name,
+        phone,
+        email,
+        currentPassword,
+      });
+      sendSuccess(res, result, 'Profile updated successfully', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/auth/password
+   * Securely changes password for the authenticated user.
+   */
+  public async changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user || !req.user.userId) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const { currentPassword, newPassword, confirmPassword } = req.body;
+      const result = await authService.changePassword(req.user.userId, {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      });
+      sendSuccess(res, result, 'Password changed successfully', 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const authController = new AuthController();

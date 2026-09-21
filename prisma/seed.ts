@@ -32,6 +32,7 @@ async function main() {
       passwordHash: adminPasswordHash,
       role: Role.ADMIN,
       status: UserStatus.ACTIVE,
+      isMasterAdmin: true,
       phone: '+91 98220 90000',
     },
     create: {
@@ -40,6 +41,7 @@ async function main() {
       passwordHash: adminPasswordHash,
       role: Role.ADMIN,
       status: UserStatus.ACTIVE,
+      isMasterAdmin: true,
       phone: '+91 98220 90000',
     },
   });

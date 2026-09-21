@@ -28,6 +28,7 @@ export const verifyToken = (token: string): AuthenticatedUserPayload => {
       role: decoded.role,
       email: decoded.email,
       volunteerId: decoded.volunteerId,
+      isMasterAdmin: decoded.isMasterAdmin ?? false,
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

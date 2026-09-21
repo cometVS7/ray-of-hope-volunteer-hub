@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  updateUserSession: (token: string, user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
+
+  const updateUserSession = (newToken: string, updatedUser: User) => {
+    localStorage.setItem('arh_token', newToken);
+    setToken(newToken);
+    setUser(updatedUser);
+  };
 
   const refreshUser = async () => {
     try {
@@ -70,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout, refreshUser, updateUserSession }}>
       {children}
     </AuthContext.Provider>
   );

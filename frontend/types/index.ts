@@ -11,8 +11,39 @@ export interface User {
   volunteerId?: string | null;
   phone?: string | null;
   status: UserStatus;
+  isMasterAdmin?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminItem {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  status: UserStatus;
+  isMasterAdmin: boolean;
+  createdAt: string;
+}
+
+export interface UpdateProfileInput {
+  name?: string;
+  phone?: string | null;
+  email?: string;
+  currentPassword?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface CreateAdminInput {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string | null;
 }
 
 export interface Task {

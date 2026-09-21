@@ -6,6 +6,17 @@ import api from '../../../lib/api';
 import StatCard from '../../../components/StatCard';
 import StatusBadge from '../../../components/StatusBadge';
 import { VolunteerDashboardData } from '../../../types';
+import {
+  Award,
+  CheckSquare,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  HeartHandshake,
+} from 'lucide-react';
 
 export default function VolunteerDashboardPage() {
   const [data, setData] = useState<VolunteerDashboardData | null>(null);
@@ -31,26 +42,21 @@ export default function VolunteerDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex items-center space-x-2 text-indigo-600">
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-          </svg>
-          <span className="text-sm font-medium text-slate-600">Loading your profile...</span>
-        </div>
+      <div className="flex flex-col items-center justify-center py-28">
+        <Sparkles className="w-8 h-8 text-indigo-600 animate-bounce mb-3" />
+        <p className="text-sm font-semibold text-slate-700">Loading your volunteer hub...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm">
-        <p className="font-semibold">Unable to load dashboard</p>
-        <p className="text-xs mt-1">{error}</p>
+      <div className="p-6 bg-white rounded-3xl border border-rose-200 shadow-mooney-card text-rose-800">
+        <h3 className="text-base font-bold">Unable to load your dashboard</h3>
+        <p className="text-xs text-slate-600 mt-1">{error}</p>
         <button
           onClick={loadDashboard}
-          className="mt-3 px-3 py-1 bg-rose-600 text-white rounded text-xs hover:bg-rose-700 cursor-pointer"
+          className="mt-4 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition"
         >
           Retry
         </button>
@@ -59,103 +65,144 @@ export default function VolunteerDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-200 bg-indigo-800/60 px-2.5 py-1 rounded-full">
-            Volunteer Hub
-          </span>
-          <h1 className="text-2xl font-bold mt-2">Welcome back, {data.volunteer.name}!</h1>
-          <p className="text-xs text-indigo-200 mt-1">
-            Volunteer ID: <span className="font-mono font-bold text-white">{data.volunteer.volunteerId || 'Assigned'}</span>
-          </p>
+    <div className="space-y-8 pb-12">
+      {/* Welcome Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 shadow-mooney-hover border border-slate-800">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-semibold border border-white/10 mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              Volunteer Space · Pune, MH
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Welcome back, {data.volunteer.name}!
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">
+              Volunteer ID: <span className="font-mono font-bold text-amber-300">{data.volunteer.volunteerId || 'Assigned'}</span> · Supervised by <span className="font-semibold text-white">Mr. Sanjay Kumar</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/volunteer/tasks"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md transition"
+            >
+              <span>View My Tasks</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/volunteer/tasks"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 font-semibold text-xs rounded-xl shadow-xs transition"
-        >
-          View My Tasks →
-        </Link>
       </div>
 
-      {/* KPI Cards */}
+      {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <StatCard
-            title="Official Service Hours"
-            value={`${data.serviceHours.official} hrs`}
-            subtitle="Admin Verified"
-            accentColor="border-l-emerald-600"
-          />
-        </div>
+        <StatCard
+          title="Verified Service Hours"
+          value={`${data.serviceHours.official}h`}
+          subtitle="Dynamically Verified"
+          colorScheme="emerald"
+          icon={<Award className="w-5 h-5" />}
+        />
         <StatCard
           title="Total Assigned"
           value={data.tasks.total}
           subtitle="All Assigned Tasks"
-          accentColor="border-l-blue-600"
+          colorScheme="indigo"
+          icon={<CheckSquare className="w-5 h-5" />}
         />
         <StatCard
           title="Under Review"
           value={data.tasks.submitted}
-          subtitle="Awaiting Verification"
-          accentColor="border-l-amber-500"
+          subtitle="Awaiting Admin Check"
+          colorScheme="amber"
+          icon={<Clock className="w-5 h-5" />}
         />
         <StatCard
           title="Approved Tasks"
           value={data.tasks.approved}
-          subtitle="Service Hours Verified"
-          accentColor="border-l-emerald-600"
+          subtitle="Hours Credited"
+          colorScheme="emerald"
+          icon={<CheckCircle2 className="w-5 h-5" />}
         />
         <StatCard
-          title="Needs Revision"
+          title="Revision Needed"
           value={data.tasks.rejected}
-          subtitle="Review Feedback"
-          accentColor="border-l-rose-500"
+          subtitle="Check feedback notes"
+          colorScheme="rose"
+          icon={<AlertCircle className="w-5 h-5" />}
         />
       </div>
 
-      {/* Recent Assigned Tasks */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+      {/* Dynamic Hours Info Callout */}
+      <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-mooney-card flex items-start gap-4">
+        <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
+          <ShieldCheck className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">How Service Hours Accrue</h3>
+          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+            Your official service hours are dynamically aggregated strictly when an administrator reviews and approves
+            your task submission. Logging hours on submitted tasks indicates expected completion, but only approved
+            hours count toward your official certificate.
+          </p>
+        </div>
+      </div>
+
+      {/* Recent Tasks */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-mooney-card overflow-hidden">
+        <div className="px-6 py-4.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider">
-              Recent Assigned Tasks
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Your latest community service tasks</p>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900">Recent Assignments</h2>
+            <p className="text-xs text-slate-500">Your latest volunteer initiatives</p>
           </div>
-          <Link href="/volunteer/tasks" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-            View all →
+          <Link
+            href="/volunteer/tasks"
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold inline-flex items-center gap-1"
+          >
+            <span>All Tasks</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         <div className="divide-y divide-slate-100">
           {data.recentTasks.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-xs">
-              No tasks currently assigned. Contact your coordinator if you are ready for a new task!
-            </div>
+            <p className="p-8 text-xs text-slate-500 text-center">No tasks assigned yet.</p>
           ) : (
             data.recentTasks.map((t) => (
-              <div key={t.id} className="p-4 sm:px-6 hover:bg-slate-50 transition flex items-center justify-between">
-                <div className="space-y-1">
+              <div key={t.id} className="p-4 sm:p-5 hover:bg-slate-50/80 transition-colors flex items-center justify-between">
+                <div className="space-y-1 max-w-[70%]">
                   <p className="text-sm font-semibold text-slate-900">{t.title}</p>
-                  <p className="text-xs text-slate-400">
-                    Deadline: <span className="text-slate-600 font-medium">{new Date(t.deadline).toLocaleDateString()}</span>
+                  <p className="text-xs text-slate-500">
+                    Assigned: {new Date(t.assignmentDate).toLocaleDateString()} · Due:{' '}
+                    <span className="font-medium text-slate-700">
+                      {new Date(t.deadline).toLocaleDateString()}
+                    </span>
                   </p>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <StatusBadge status={t.status} />
-                  <Link
-                    href="/volunteer/tasks"
-                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    Open →
-                  </Link>
-                </div>
+                <StatusBadge status={t.status} />
               </div>
             ))
           )}
         </div>
+      </div>
+
+      {/* Mentor Guidance Card */}
+      <div className="p-5 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <HeartHandshake className="w-6 h-6 text-amber-400 shrink-0" />
+          <div>
+            <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">NGO Mentorship</p>
+            <p className="text-sm font-bold text-white">Guided by Mr. Sanjay Kumar</p>
+            <p className="text-xs text-slate-400">A Ray of Hope Foundation · Pune, Maharashtra</p>
+          </div>
+        </div>
+        <Link
+          href="/volunteer/impact"
+          className="text-xs font-semibold text-indigo-300 hover:text-white underline underline-offset-4"
+        >
+          View Impact Summary →
+        </Link>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ export interface AuthenticatedUserPayload {
   role: Role;
   email: string;
   volunteerId?: string | null;
+  isMasterAdmin?: boolean;
 }
 
 export interface SafeUser {
@@ -22,6 +23,7 @@ export interface SafeUser {
   volunteerId?: string | null;
   phone?: string | null;
   status: UserStatus;
+  isMasterAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,7 +44,38 @@ export interface AuthSuccessData {
     volunteerId?: string | null;
     phone?: string | null;
     status: UserStatus;
+    isMasterAdmin: boolean;
   };
+}
+
+export interface UpdateProfileInput {
+  name?: string;
+  phone?: string | null;
+  email?: string;
+  currentPassword?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface CreateAdminInput {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string | null;
+}
+
+export interface SafeAdminItem {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  status: UserStatus;
+  isMasterAdmin: boolean;
+  createdAt: Date;
 }
 
 export interface CreateVolunteerInput {

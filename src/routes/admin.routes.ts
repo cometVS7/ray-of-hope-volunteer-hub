@@ -3,10 +3,27 @@ import volunteerController from '../controllers/volunteer.controller.js';
 import taskController from '../controllers/task.controller.js';
 import taskReviewController from '../controllers/task-review.controller.js';
 import dashboardController from '../controllers/dashboard.controller.js';
+import adminManagementController from '../controllers/admin-management.controller.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
 import { requireAdmin } from '../middlewares/role.middleware.js';
+import { requireMasterAdmin } from '../middlewares/master-admin.middleware.js';
 
 const router = Router();
+
+// ==========================================
+// ADMIN MANAGEMENT (MASTER ADMIN PRIVILEGED)
+// ==========================================
+router.use('/admins', authenticate, requireAdmin);
+
+// GET /api/admin/admins - List all administrator accounts
+router.get('/admins', (req, res, next) => {
+  adminManagementController.listAdmins(req, res, next);
+});
+
+// POST /api/admin/admins - Create a new administrator account (Master Admin only)
+router.post('/admins', requireMasterAdmin, (req, res, next) => {
+  adminManagementController.createAdmin(req, res, next);
+});
 
 // ==========================================
 // ADMIN DASHBOARD & STATISTICS ROUTES
@@ -108,4 +125,3 @@ router.patch('/submissions/:id/reject', (req, res, next) => {
 });
 
 export default router;
-

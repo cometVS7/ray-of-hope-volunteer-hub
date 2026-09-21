@@ -14,4 +14,14 @@ router.get('/me', authenticate, (req, res, next) => {
   authController.getMe(req, res, next);
 });
 
+// Protected profile update route (Admin or Volunteer)
+router.patch('/profile', authenticate, (req, res, next) => {
+  authController.updateProfile(req, res, next);
+});
+
+// Protected password change route (Admin or Volunteer)
+router.patch('/password', authenticate, (req, res, next) => {
+  authController.changePassword(req, res, next);
+});
+
 export default router;
